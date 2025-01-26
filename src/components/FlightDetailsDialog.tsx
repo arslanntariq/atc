@@ -4,8 +4,10 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Flight, Emergency } from '@/types';
+import { Progress } from "@/components/ui/progress";
 
 interface FlightDetailsDialogProps {
   flight: Flight | null;
@@ -22,6 +24,9 @@ const FlightDetailsDialog = ({ flight, emergency, isOpen, onClose }: FlightDetai
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Flight Details - {flight.id}</DialogTitle>
+          <DialogDescription>
+            {flight.departureAirport} → {flight.arrivalAirport}
+          </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="space-y-2">
@@ -43,6 +48,26 @@ const FlightDetailsDialog = ({ flight, emergency, isOpen, onClose }: FlightDetai
             <div>
               <p className="text-sm font-medium">Speed</p>
               <p className="text-2xl font-mono">{flight.speed}kts</p>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <p className="text-sm font-medium">Fuel Level</p>
+            <Progress value={flight.fuelLevel} className="h-2" />
+            <p className="text-sm text-muted-foreground">{flight.fuelLevel.toFixed(1)}%</p>
+          </div>
+
+          <div className="space-y-2">
+            <p className="text-sm font-medium">Route</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs text-muted-foreground">From</p>
+                <p className="font-medium">{flight.departureAirport}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">To</p>
+                <p className="font-medium">{flight.arrivalAirport}</p>
+              </div>
             </div>
           </div>
 
