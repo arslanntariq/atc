@@ -8,16 +8,14 @@ import { Flight, Emergency } from '@/types';
 const Index = () => {
   const { flights, emergencies, addFlight, triggerEmergency } = useFlightSimulation();
 
-  const handleAddFlight = (flightData: Omit<Flight, 'id'>) => {
+  const handleAddFlight = () => {
     // Ensure we're passing a plain object
-    const serializedFlight = JSON.parse(JSON.stringify(flightData));
-    addFlight(serializedFlight);
+    addFlight();
   };
 
-  const handleEmergency = (emergency: Omit<Emergency, 'id' | 'timestamp'>) => {
+  const handleEmergency = () => {
     // Ensure we're passing a plain object
-    const serializedEmergency = JSON.parse(JSON.stringify(emergency));
-    triggerEmergency(serializedEmergency);
+    triggerEmergency();
   };
 
   return (
