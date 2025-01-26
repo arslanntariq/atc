@@ -1,7 +1,8 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Flight, Emergency } from '@/types';
+import FlightDetailsDialog from './FlightDetailsDialog';
 
 interface MapProps {
   flights: Flight[];
@@ -12,6 +13,7 @@ const Map = ({ flights, emergencies }: MapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<{ [key: string]: mapboxgl.Marker }>({});
+  const [selectedFlight, setSelectedFlight] = useState<Flight | null>(null);
 
   useEffect(() => {
     if (!mapContainer.current) return;
@@ -53,13 +55,13 @@ const Map = ({ flights, emergencies }: MapProps) => {
   useEffect(() => {
     if (!map.current) return;
 
-    // Update markers
     flights.forEach(flight => {
       let marker = markersRef.current[flight.id];
       
       if (!marker) {
         const el = document.createElement('div');
         el.className = 'flight-marker';
+        el.addEventListener('click', () => setSelectedFlight(flight));
         
         marker = new mapboxgl.Marker(el)
           .setLngLat([flight.longitude, flight.latitude])
@@ -71,7 +73,6 @@ const Map = ({ flights, emergencies }: MapProps) => {
       }
     });
 
-    // Remove old markers
     Object.keys(markersRef.current).forEach(id => {
       if (!flights.find(f => f.id === id)) {
         markersRef.current[id].remove();
@@ -80,10 +81,20 @@ const Map = ({ flights, emergencies }: MapProps) => {
     });
   }, [flights]);
 
+  const getEmergencyForFlight = (flightId: string) => {
+    return emergencies.find(e => e.flightId === flightId) || null;
+  };
+
   return (
     <div className="relative w-full h-full rounded-lg overflow-hidden">
       <div ref={mapContainer} className="map-container" />
       <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-transparent to-background/10" />
+      <FlightDetailsDialog
+        flight={selectedFlight}
+        emergency={selectedFlight ? getEmergencyForFlight(selectedFlight.id) : null}
+        isOpen={!!selectedFlight}
+        onClose={() => setSelectedFlight(null)}
+      />
     </div>
   );
 };

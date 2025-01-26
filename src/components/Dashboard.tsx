@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Flight, Emergency } from '@/types';
+import FlightDetailsDialog from './FlightDetailsDialog';
 
 interface DashboardProps {
   flights: Flight[];
@@ -8,6 +9,12 @@ interface DashboardProps {
 }
 
 const Dashboard = ({ flights, emergencies }: DashboardProps) => {
+  const [selectedFlight, setSelectedFlight] = useState<Flight | null>(null);
+
+  const getEmergencyForFlight = (flightId: string) => {
+    return emergencies.find(e => e.flightId === flightId) || null;
+  };
+
   return (
     <div className="glassmorphism rounded-lg p-4 space-y-4">
       <h2 className="text-xl font-bold text-primary">Flight Status</h2>
@@ -26,7 +33,11 @@ const Dashboard = ({ flights, emergencies }: DashboardProps) => {
 
       <div className="h-[200px] overflow-y-auto">
         {flights.map(flight => (
-          <div key={flight.id} className="flex items-center justify-between p-2 border-b border-border">
+          <div
+            key={flight.id}
+            className="flex items-center justify-between p-2 border-b border-border hover:bg-secondary/10 cursor-pointer transition-colors"
+            onClick={() => setSelectedFlight(flight)}
+          >
             <div>
               <p className="font-mono">{flight.id}</p>
               <p className="text-sm text-muted-foreground">
@@ -43,6 +54,13 @@ const Dashboard = ({ flights, emergencies }: DashboardProps) => {
           </div>
         ))}
       </div>
+
+      <FlightDetailsDialog
+        flight={selectedFlight}
+        emergency={selectedFlight ? getEmergencyForFlight(selectedFlight.id) : null}
+        isOpen={!!selectedFlight}
+        onClose={() => setSelectedFlight(null)}
+      />
     </div>
   );
 };
