@@ -24,8 +24,8 @@ const Map = ({ flights, emergencies }: MapProps) => {
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/dark-v11',
       projection: 'globe',
-      zoom: 1.5,
-      center: [0, 20],
+      zoom: 4,
+      center: [69.3451, 30.3753],
       pitch: 45,
     });
 

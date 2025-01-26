@@ -3,10 +3,14 @@ import { Flight, Emergency, Airport } from '@/types';
 import { toast } from '@/components/ui/use-toast';
 
 const AIRPORTS: Airport[] = [
-  { code: 'JFK', name: 'John F. Kennedy', latitude: 40.6413, longitude: -73.7781, runways: 4, availableRunways: 4 },
-  { code: 'LAX', name: 'Los Angeles Int', latitude: 33.9416, longitude: -118.4085, runways: 4, availableRunways: 4 },
-  { code: 'ORD', name: "O'Hare Int", latitude: 41.9742, longitude: -87.9073, runways: 8, availableRunways: 8 },
-  { code: 'LHR', name: 'London Heathrow', latitude: 51.4700, longitude: -0.4543, runways: 2, availableRunways: 2 },
+  { code: 'LHE', name: 'Allama Iqbal International', latitude: 31.5216, longitude: 74.4036, runways: 2, availableRunways: 2 },
+  { code: 'KHI', name: 'Jinnah International', latitude: 24.9008, longitude: 67.1681, runways: 3, availableRunways: 3 },
+  { code: 'ISB', name: 'Islamabad International', latitude: 33.6162, longitude: 73.0996, runways: 2, availableRunways: 2 },
+  { code: 'DXB', name: 'Dubai International', latitude: 25.2532, longitude: 55.3657, runways: 2, availableRunways: 2 },
+  { code: 'DEL', name: 'Indira Gandhi International', latitude: 28.5562, longitude: 77.1000, runways: 3, availableRunways: 3 },
+  { code: 'DOH', name: 'Hamad International', latitude: 25.2609, longitude: 51.6138, runways: 2, availableRunways: 2 },
+  { code: 'IST', name: 'Istanbul Airport', latitude: 41.2753, longitude: 28.7519, runways: 3, availableRunways: 3 },
+  { code: 'BKK', name: 'Suvarnabhumi Airport', latitude: 13.6900, longitude: 100.7501, runways: 2, availableRunways: 2 }
 ];
 
 const FUEL_CONSUMPTION_RATE = 0.1; // % per second
