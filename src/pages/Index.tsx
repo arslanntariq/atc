@@ -9,12 +9,12 @@ const Index = () => {
   const { flights, emergencies, addFlight, triggerEmergency } = useFlightSimulation();
 
   const handleAddFlight = () => {
-    // Ensure we're passing a plain object
+    // Ensure data is serializable by creating a plain object
     addFlight();
   };
 
   const handleEmergency = () => {
-    // Ensure we're passing a plain object
+    // Ensure data is serializable by creating a plain object
     triggerEmergency();
   };
 

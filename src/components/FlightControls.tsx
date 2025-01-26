@@ -2,11 +2,10 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
-import { Flight, Emergency } from '@/types';
 
 interface FlightControlsProps {
-  onAddFlight: (flightData?: Omit<Flight, 'id'>) => void;
-  onEmergency: (emergency?: Omit<Emergency, 'id' | 'timestamp'>) => void;
+  onAddFlight: () => void;
+  onEmergency: () => void;
 }
 
 const FlightControls = ({ onAddFlight, onEmergency }: FlightControlsProps) => {
