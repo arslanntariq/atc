@@ -3,9 +3,22 @@ import Map from '@/components/Map';
 import Dashboard from '@/components/Dashboard';
 import FlightControls from '@/components/FlightControls';
 import { useFlightSimulation } from '@/hooks/useFlightSimulation';
+import { Flight, Emergency } from '@/types';
 
 const Index = () => {
   const { flights, emergencies, addFlight, triggerEmergency } = useFlightSimulation();
+
+  const handleAddFlight = (flightData: Omit<Flight, 'id'>) => {
+    // Ensure we're passing a plain object
+    const serializedFlight = JSON.parse(JSON.stringify(flightData));
+    addFlight(serializedFlight);
+  };
+
+  const handleEmergency = (emergency: Omit<Emergency, 'id' | 'timestamp'>) => {
+    // Ensure we're passing a plain object
+    const serializedEmergency = JSON.parse(JSON.stringify(emergency));
+    triggerEmergency(serializedEmergency);
+  };
 
   return (
     <div className="min-h-screen p-4 space-y-4">
@@ -15,7 +28,7 @@ const Index = () => {
         </div>
         <div className="lg:w-1/3 h-full flex flex-col gap-4">
           <Dashboard flights={flights} emergencies={emergencies} />
-          <FlightControls onAddFlight={addFlight} onEmergency={triggerEmergency} />
+          <FlightControls onAddFlight={handleAddFlight} onEmergency={handleEmergency} />
         </div>
       </div>
     </div>
