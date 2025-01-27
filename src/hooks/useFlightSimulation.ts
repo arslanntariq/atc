@@ -14,8 +14,8 @@ const AIRPORTS: Airport[] = [
   { code: 'BKK', name: 'Suvarnabhumi Airport', latitude: 13.6900, longitude: 100.7501, runways: 2, availableRunways: 2 }
 ];
 
-const FUEL_CONSUMPTION_RATE = 0.1; // % per second
-const LANDING_THRESHOLD_DISTANCE = 0.5; // degrees
+const FUEL_CONSUMPTION_RATE = 0.1;
+const LANDING_THRESHOLD_DISTANCE = 0.5;
 const TAKEOFF_FUEL = 100;
 const LANDING_FUEL_THRESHOLD = 20;
 
@@ -63,7 +63,7 @@ const generateRandomFlight = (initialStatus?: 'landed' | 'takeoff' | 'cruising')
     fuelLevel,
     priority: status === 'landed' ? 0 : 1,
     estimatedArrivalTime: new Date(Date.now() + Math.random() * 3600000).toISOString(),
-  };
+  }));
 };
 
 const generateInitialFlights = (): Flight[] => {
@@ -92,28 +92,23 @@ export const useFlightSimulation = () => {
   const [emergencies, setEmergencies] = useState<Emergency[]>([]);
   const [airports, setAirports] = useState<Airport[]>(AIRPORTS);
 
-  // Priority Scheduling Algorithm
   const priorityScheduler = useCallback(() => {
     setFlights(prev => {
-      return [...prev].sort((a, b) => {
-        // Emergency flights get highest priority
+      const sortedFlights = [...prev].sort((a, b) => {
         if (a.status === 'emergency') return -1;
         if (b.status === 'emergency') return 1;
-
-        // Low fuel gets higher priority
         if (a.fuelLevel < LANDING_FUEL_THRESHOLD) return -1;
         if (b.fuelLevel < LANDING_FUEL_THRESHOLD) return 1;
-
-        // Sort by combined priority score
         return (b.priority + (100 - b.fuelLevel)) - (a.priority + (100 - a.fuelLevel));
       });
+      // Ensure the sorted array is serializable
+      return JSON.parse(JSON.stringify(sortedFlights));
     });
   }, []);
 
-  // Resource Management (Runway Allocation)
   const allocateRunways = useCallback(() => {
     setAirports(prev => {
-      return prev.map(airport => {
+      const updatedAirports = prev.map(airport => {
         const landingFlights = flights.filter(f => 
           f.arrivalAirport === airport.code && 
           (f.status === 'landing' || f.status === 'emergency')
@@ -124,6 +119,8 @@ export const useFlightSimulation = () => {
           availableRunways: Math.max(0, airport.runways - landingFlights),
         };
       });
+      // Ensure the updated airports array is serializable
+      return JSON.parse(JSON.stringify(updatedAirports));
     });
   }, [flights]);
 
@@ -198,14 +195,17 @@ export const useFlightSimulation = () => {
           });
         }
 
-        return {
-          ...flight,
-          longitude: newLongitude,
-          latitude: newLatitude,
-          fuelLevel: newFuelLevel,
-          status: newStatus,
-        };
-      }));
+          return {
+            ...flight,
+            longitude: newLongitude,
+            latitude: newLatitude,
+            fuelLevel: newFuelLevel,
+            status: newStatus,
+          };
+        });
+        // Ensure the updated flights array is serializable
+        return JSON.parse(JSON.stringify(updatedFlights));
+      });
 
       priorityScheduler();
       allocateRunways();
@@ -224,8 +224,8 @@ export const useFlightSimulation = () => {
     });
   };
 
-  const triggerEmergency = (flightId?: string) => {
-    let targetFlightId = flightId;
+  const triggerEmergency = () => {
+    if (flights.length === 0) return;
     
     if (!targetFlightId && flights.length > 0) {
       const activeFlights = flights.filter(f => f.status !== 'landed');
@@ -254,7 +254,7 @@ export const useFlightSimulation = () => {
       timestamp: new Date().toISOString(),
     };
     
-    setEmergencies(prev => [...prev, newEmergency]);
+    setEmergencies(prev => JSON.parse(JSON.stringify([...prev, newEmergency])));
 
     toast({
       title: "Emergency Declared",
