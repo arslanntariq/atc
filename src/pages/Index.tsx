@@ -3,18 +3,15 @@ import Map from '@/components/Map';
 import Dashboard from '@/components/Dashboard';
 import FlightControls from '@/components/FlightControls';
 import { useFlightSimulation } from '@/hooks/useFlightSimulation';
-import { Flight, Emergency } from '@/types';
 
 const Index = () => {
   const { flights, emergencies, addFlight, triggerEmergency } = useFlightSimulation();
 
   const handleAddFlight = () => {
-    // Ensure data is serializable by creating a plain object
     addFlight();
   };
 
   const handleEmergency = () => {
-    // Ensure data is serializable by creating a plain object
     triggerEmergency();
   };
 

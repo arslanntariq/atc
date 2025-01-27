@@ -25,8 +25,7 @@ const generateRandomFlight = (): Flight => {
     arrivalAirport = AIRPORTS[Math.floor(Math.random() * AIRPORTS.length)];
   } while (arrivalAirport.code === departureAirport.code);
 
-  // Create a plain serializable object
-  return JSON.parse(JSON.stringify({
+  return {
     id: `FL${Math.floor(Math.random() * 9999)}`,
     latitude: departureAirport.latitude,
     longitude: departureAirport.longitude,
@@ -38,7 +37,7 @@ const generateRandomFlight = (): Flight => {
     fuelLevel: TAKEOFF_FUEL,
     priority: 1,
     estimatedArrivalTime: new Date(Date.now() + Math.random() * 3600000).toISOString(),
-  }));
+  };
 };
 
 const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
@@ -59,7 +58,6 @@ export const useFlightSimulation = () => {
         if (b.fuelLevel < LANDING_FUEL_THRESHOLD) return 1;
         return (b.priority + (100 - b.fuelLevel)) - (a.priority + (100 - a.fuelLevel));
       });
-      // Ensure the sorted array is serializable
       return JSON.parse(JSON.stringify(sortedFlights));
     });
   }, []);
@@ -77,14 +75,13 @@ export const useFlightSimulation = () => {
           availableRunways: Math.max(0, airport.runways - landingFlights),
         };
       });
-      // Ensure the updated airports array is serializable
       return JSON.parse(JSON.stringify(updatedAirports));
     });
   }, [flights]);
 
   useEffect(() => {
     const initialFlights = Array(10).fill(null).map(() => generateRandomFlight());
-    setFlights(initialFlights);
+    setFlights(JSON.parse(JSON.stringify(initialFlights)));
   }, []);
 
   useEffect(() => {
@@ -133,7 +130,6 @@ export const useFlightSimulation = () => {
             status: newStatus,
           };
         });
-        // Ensure the updated flights array is serializable
         return JSON.parse(JSON.stringify(updatedFlights));
       });
 
@@ -189,9 +185,9 @@ export const useFlightSimulation = () => {
   };
 
   return {
-    flights,
-    emergencies,
-    airports,
+    flights: JSON.parse(JSON.stringify(flights)),
+    emergencies: JSON.parse(JSON.stringify(emergencies)),
+    airports: JSON.parse(JSON.stringify(airports)),
     addFlight,
     triggerEmergency,
   };
