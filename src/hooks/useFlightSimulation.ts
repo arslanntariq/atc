@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Flight, Emergency, Airport } from '@/types';
 import { toast } from '@/components/ui/use-toast';
 
+// Constants
 const AIRPORTS: Airport[] = [
   { code: 'LHE', name: 'Allama Iqbal International', latitude: 31.5216, longitude: 74.4036, runways: 2, availableRunways: 2 },
   { code: 'KHI', name: 'Jinnah International', latitude: 24.9008, longitude: 67.1681, runways: 3, availableRunways: 3 },
@@ -18,32 +19,74 @@ const LANDING_THRESHOLD_DISTANCE = 0.5; // degrees
 const TAKEOFF_FUEL = 100;
 const LANDING_FUEL_THRESHOLD = 20;
 
-const generateRandomFlight = (): Flight => {
+// Helper Functions
+const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+  return Math.sqrt(Math.pow(lat2 - lat1, 2) + Math.pow(lon2 - lon1, 2));
+};
+
+const generateRandomFlight = (initialStatus?: 'landed' | 'takeoff' | 'cruising'): Flight => {
   const departureAirport = AIRPORTS[Math.floor(Math.random() * AIRPORTS.length)];
   let arrivalAirport;
   do {
     arrivalAirport = AIRPORTS[Math.floor(Math.random() * AIRPORTS.length)];
   } while (arrivalAirport.code === departureAirport.code);
 
+  // Set default status and attributes based on flight status
+  let status = initialStatus || 'takeoff';
+  let altitude = Math.floor(Math.random() * 35000 + 5000);
+  let fuelLevel = TAKEOFF_FUEL;
+
+  switch (status) {
+    case 'landed':
+      altitude = 0;
+      fuelLevel = 10;
+      break;
+    case 'takeoff':
+      altitude = Math.floor(Math.random() * 5000 + 1000);
+      fuelLevel = 95;
+      break;
+    case 'cruising':
+      altitude = Math.floor(Math.random() * 15000 + 25000);
+      fuelLevel = Math.floor(Math.random() * 30 + 60);
+      break;
+  }
+
   return {
     id: `FL${Math.floor(Math.random() * 9999)}`,
     latitude: departureAirport.latitude,
     longitude: departureAirport.longitude,
-    altitude: Math.floor(Math.random() * 35000 + 5000),
+    altitude,
     speed: Math.floor(Math.random() * 500 + 300),
-    status: 'takeoff',
+    status,
     departureAirport: departureAirport.code,
     arrivalAirport: arrivalAirport.code,
-    fuelLevel: TAKEOFF_FUEL,
-    priority: 1,
+    fuelLevel,
+    priority: status === 'landed' ? 0 : 1,
     estimatedArrivalTime: new Date(Date.now() + Math.random() * 3600000).toISOString(),
   };
 };
 
-const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-  return Math.sqrt(Math.pow(lat2 - lat1, 2) + Math.pow(lon2 - lon1, 2));
+const generateInitialFlights = (): Flight[] => {
+  const flights: Flight[] = [];
+  
+  // Generate 2 landed flights first
+  flights.push(generateRandomFlight('landed'));
+  flights.push(generateRandomFlight('landed'));
+  
+  // Generate 3 takeoff flights
+  for (let i = 0; i < 3; i++) {
+    flights.push(generateRandomFlight('takeoff'));
+  }
+  
+  // Generate 5 cruising flights
+  for (let i = 0; i < 5; i++) {
+    flights.push(generateRandomFlight('cruising'));
+  }
+  
+  return flights;
 };
 
+// Main Hook
 export const useFlightSimulation = () => {
   const [flights, setFlights] = useState<Flight[]>([]);
   const [emergencies, setEmergencies] = useState<Emergency[]>([]);
@@ -84,27 +127,45 @@ export const useFlightSimulation = () => {
     });
   }, [flights]);
 
-  // Initialize with 10 flights
+  // Initialize flights
   useEffect(() => {
-    const initialFlights = Array(10).fill(null).map(() => generateRandomFlight());
+    const initialFlights = generateInitialFlights();
     setFlights(initialFlights);
   }, []);
 
-  // Simulate real-time updates
+  // Flight Statistics
+  const flightStats = useMemo(() => {
+    const total = flights.length;
+    const active = flights.filter(f => f.status !== 'landed').length;
+    const landed = flights.filter(f => f.status === 'landed').length;
+    const takeoff = flights.filter(f => f.status === 'takeoff').length;
+    const cruising = flights.filter(f => f.status === 'cruising').length;
+    
+    return {
+      total,
+      active,
+      landed,
+      takeoff,
+      cruising
+    };
+  }, [flights]);
+
+  // Real-time flight updates
   useEffect(() => {
     const interval = setInterval(() => {
       setFlights(prev => prev.map(flight => {
-        // Get destination airport
+        if (flight.status === 'landed') return flight;
+
         const arrivalAirport = AIRPORTS.find(a => a.code === flight.arrivalAirport);
         if (!arrivalAirport) return flight;
 
-        // Calculate new position
+        // Update position
         const dx = (arrivalAirport.longitude - flight.longitude) * 0.01;
         const dy = (arrivalAirport.latitude - flight.latitude) * 0.01;
         const newLongitude = flight.longitude + dx;
         const newLatitude = flight.latitude + dy;
 
-        // Calculate distance to destination
+        // Check distance to destination
         const distanceToDestination = calculateDistance(
           newLatitude,
           newLongitude,
@@ -112,10 +173,10 @@ export const useFlightSimulation = () => {
           arrivalAirport.longitude
         );
 
-        // Update fuel level
+        // Update fuel
         const newFuelLevel = Math.max(0, flight.fuelLevel - FUEL_CONSUMPTION_RATE);
 
-        // Determine new status
+        // Update status
         let newStatus = flight.status;
         if (flight.status !== 'emergency') {
           if (distanceToDestination < LANDING_THRESHOLD_DISTANCE) {
@@ -125,8 +186,11 @@ export const useFlightSimulation = () => {
           }
         }
 
-        // Check for low fuel
-        if (newFuelLevel < LANDING_FUEL_THRESHOLD && flight.status !== 'emergency') {
+        // Low fuel alert - only for active flights
+        if (newFuelLevel < LANDING_FUEL_THRESHOLD && 
+            flight.status !== 'emergency' && 
+            flight.status !== 'landed' &&
+            newStatus !== 'landed') {  // Also check new status isn't landed
           toast({
             title: "Low Fuel Alert",
             description: `Flight ${flight.id} is running low on fuel (${newFuelLevel.toFixed(1)}%)`,
@@ -143,17 +207,16 @@ export const useFlightSimulation = () => {
         };
       }));
 
-      // Run scheduling algorithm
       priorityScheduler();
-      // Manage resources
       allocateRunways();
     }, 1000);
 
     return () => clearInterval(interval);
   }, [priorityScheduler, allocateRunways]);
 
+  // Flight Management Functions
   const addFlight = () => {
-    const newFlight = generateRandomFlight();
+    const newFlight = generateRandomFlight('takeoff');
     setFlights(prev => [...prev, newFlight]);
     toast({
       title: "New Flight Added",
@@ -164,10 +227,12 @@ export const useFlightSimulation = () => {
   const triggerEmergency = (flightId?: string) => {
     let targetFlightId = flightId;
     
-    // If no specific flight, choose a random one
     if (!targetFlightId && flights.length > 0) {
-      const randomIndex = Math.floor(Math.random() * flights.length);
-      targetFlightId = flights[randomIndex].id;
+      const activeFlights = flights.filter(f => f.status !== 'landed');
+      if (activeFlights.length > 0) {
+        const randomIndex = Math.floor(Math.random() * activeFlights.length);
+        targetFlightId = activeFlights[randomIndex].id;
+      }
     }
     
     if (!targetFlightId) return;
@@ -202,6 +267,7 @@ export const useFlightSimulation = () => {
     flights,
     emergencies,
     airports,
+    flightStats,
     addFlight,
     triggerEmergency,
   };

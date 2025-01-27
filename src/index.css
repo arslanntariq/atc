@@ -4,8 +4,8 @@
  
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 222.2 84% 4.9%;
+  --foreground: 210 40% 98%;
 
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
@@ -74,6 +74,10 @@
     @apply bg-background text-foreground;
   }
 }
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
 
 .map-container {
   width: 100%;
@@ -93,4 +97,60 @@
 .flight-marker:hover {
   transform: scale(1.2);
   background-color: #3b82f6;
+}
+
+
+.mapboxgl-ctrl-top-right {
+  top: 1rem !important;
+  right: 1rem !important;
+}
+
+.mapboxgl-ctrl-group {
+  background-color: rgb(31, 41, 55) !important;
+  border: 1px solid rgb(55, 65, 81) !important;
+}
+
+.mapboxgl-ctrl-group button {
+  color: white !important;
+}
+
+.mapboxgl-ctrl-group button:hover {
+  background-color: rgb(55, 65, 81) !important;
+}
+
+
+.plane-marker {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.plane-marker svg {
+  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
+}
+
+.plane-marker:not(.emergency) svg {
+  color: #60A5FA; /* blue-400 */
+}
+
+.plane-marker.emergency {
+  animation: pulse 2s infinite;
+}
+
+.plane-marker.emergency svg {
+  color: #EF4444; /* red-500 */
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1) rotate(var(--rotation));
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1) rotate(var(--rotation));
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1) rotate(var(--rotation));
+    opacity: 1;
+  }
 }
