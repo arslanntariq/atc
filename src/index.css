@@ -139,6 +139,9 @@ body {
 .plane-marker.emergency svg {
   color: #EF4444; /* red-500 */
 }
+.transition-all{
+ background: red;
+}
 
 @keyframes pulse {
   0% {
